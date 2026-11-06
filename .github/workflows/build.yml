@@ -25,15 +25,13 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Setup Android
-        uses: android-actions/setup-android@v3
-
       - name: Install SDK
         shell: bash
         run: |
           set +o pipefail
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Listar arquivos do repositório
         run: ls -la
