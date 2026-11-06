@@ -1,4 +1,3 @@
-
 name: SportUp APK
 
 on:
@@ -30,23 +29,35 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Install SDK
+        shell: bash
         run: |
-          yes | sdkmanager --licenses
+          set +o pipefail
+          yes | sdkmanager --licenses > /dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Listar arquivos do repositório
+        run: ls -la
 
       - name: Extract project
         run: |
-          mkdir projeto
-          unzip -q SportUp-Android-Studio.zip -d projeto
+          ZIP=$(find . -maxdepth 2 -name "SportUp-Android-Studio.zip" | head -n 1)
+          if [ -z "$ZIP" ]; then
+            echo "ERRO: zip não encontrado no repositório"
+            exit 1
+          fi
+          mkdir -p projeto
+          unzip -q "$ZIP" -d projeto
 
       - name: Build APK
         run: |
-          cd projeto/SportUp-Android
-          gradle assembleDebug
+          DIR=$(dirname "$(find projeto -name 'settings.gradle*' | head -n 1)")
+          echo "Projeto em: $DIR"
+          cd "$DIR"
+          gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SportUp-APK
-          path: projeto/SportUp-Android/app/build/outputs/apk/debug/app-debug.apk
-          
+          path: projeto/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
